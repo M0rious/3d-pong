@@ -1,47 +1,45 @@
 use crate::*;
-pub struct PlayerPlugin;
-impl Plugin for PlayerPlugin {
+pub struct OpponentPlugin;
+impl Plugin for OpponentPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Player>()
-            .add_system_set(SystemSet::on_enter(GameState::Gameplay).with_system(spawn_player))
+        app.register_type::<Opponent>()
+            .add_system_set(SystemSet::on_enter(GameState::Gameplay).with_system(spawn_opponent))
             .add_system_set(SystemSet::on_update(GameState::Gameplay).with_system(controls));
     }
 }
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
-pub struct Player;
-fn spawn_player(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
+pub struct Opponent;
+fn spawn_opponent(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
             transform: Transform {
-                translation: Vec3::new(-12.5, 0.0, 0.0),
+                translation: Vec3::new(12.5, 0.0, 0.0),
                 rotation: Quat::IDENTITY,
                 scale: Vec3::new(1.0, 3.0, 3.0),
             },
             ..Default::default()
         })
-        .insert(Name::new("Player"))
-        .insert(Player)
+        .insert(Name::new("Opponent"))
+        .insert(Opponent)
         .insert(RigidBody::KinematicPositionBased)
         .insert(GravityScale(0.0))
         .insert(Collider::cuboid(0.5, 1.5, 0.5))
         .insert(Restitution::coefficient(1.3))
-        .insert(Friction::coefficient(0.0))
         .insert(KinematicCharacterController::default());
 }
-
 fn controls(
     keyboard: Res<Input<KeyCode>>,
-    mut controllers: Query<&mut KinematicCharacterController, With<Player>>,
+    mut controllers: Query<&mut KinematicCharacterController, With<Opponent>>,
 ) {
     let mut controller = controllers.single_mut();
 
     let speed = 0.2;
-    if keyboard.pressed(KeyCode::W) {
+    if keyboard.pressed(KeyCode::Up) {
         controller.translation = Some(Vec3::new(0.0, 0.0, -speed));
     }
-    if keyboard.pressed(KeyCode::S) {
+    if keyboard.pressed(KeyCode::Down) {
         controller.translation = Some(Vec3::new(0.0, 0.0, speed));
     }
 }
