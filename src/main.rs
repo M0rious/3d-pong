@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use ball::BallPlugin;
 //use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
-use bevy::{app::AppExit, prelude::*, render::render_resource::ShaderStage};
+use bevy::{app::AppExit, prelude::*};
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_rapier3d::prelude::*;
@@ -21,6 +21,7 @@ mod opponent;
 mod player;
 mod scoreboard;
 mod walls;
+extern crate rand;
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::rgb(0.6, 0.6, 0.6)))
@@ -73,6 +74,8 @@ pub enum Side {
 fn asset_loading(mut commands: Commands, assets: Res<AssetServer>) {
     commands.insert_resource(GameAssets {
         ball_scene: assets.load("ball.glb#Scene0"),
+        grass_texture: assets.load("textures/grass.tga"),
+        grass_normal: assets.load("textures/grass_normal.tga"),
     });
 }
 
@@ -86,12 +89,15 @@ fn spawn_camera(mut commands: Commands) {
 #[derive(Resource)]
 pub struct GameAssets {
     pub ball_scene: Handle<Scene>,
+    pub grass_texture: Handle<Image>,
+    pub grass_normal: Handle<Image>,
 }
 
 fn spawn_basic_scene(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    assets: Res<GameAssets>,
 ) {
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
@@ -123,14 +129,18 @@ fn spawn_basic_scene(
 
     commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane { size: 50.0 })),
-            material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+            mesh: meshes.add(Mesh::from(shape::Plane { size: 30.0 })),
+            material: materials.add(StandardMaterial {
+                base_color_texture: Some(assets.grass_texture.clone()),
+                normal_map_texture: Some(assets.grass_normal.clone()),
+                ..Default::default()
+            }),
             ..default()
         })
         .insert(Collider::cuboid(50.0, 0.1, 50.0))
         .insert(TransformBundle::from(Transform::from_xyz(0.0, -0.05, 0.0)))
         .insert(Name::new("Ground"))
-        .insert(Restitution::coefficient(1.0));
+        .insert(Restitution::coefficient(0.0));
 }
 
 fn quit(keyboard: Res<Input<KeyCode>>, mut exit: EventWriter<AppExit>) {
