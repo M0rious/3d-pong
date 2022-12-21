@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use crate::*;
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
@@ -15,7 +17,7 @@ impl Plugin for BallPlugin {
 fn spawn_ball(mut commands: Commands, assets: Res<GameAssets>) {
     commands
         .spawn(SpatialBundle {
-            transform: Transform::from_xyz(0.0, 1.0, 0.0),
+            transform: Transform::from_xyz(0.0, 1.2, 0.0),
             ..default()
         })
         .with_children(|commands| {
@@ -35,36 +37,49 @@ fn spawn_ball(mut commands: Commands, assets: Res<GameAssets>) {
         .insert(GravityScale(1.0))
         .insert(Collider::ball(1.15))
         .insert(Velocity::linear(Vec3::new(-10.0, 0.0, 0.0)))
-        .insert(Restitution::coefficient(1.3));
+        .insert(Restitution::coefficient(1.3))
+        //.insert(LockedAxes::TRANSLATION_LOCKED_Y)
+        ;
 }
 
 fn ball_velocity(mut ball: Query<&mut Velocity, With<Ball>>) {
     let mut tr = ball.single_mut();
-
-    let speed = 10.0;
-    tr.linvel = adjust_vector(tr.linvel, speed);
+    //if tr.linvel.length() > 0.0 {
+    //  let speed = 10.0;
+    tr.linvel = adjust_vector(tr.linvel);
+    //}
 }
 
 fn detect_goal(
-    ball: Query<&Transform, With<Ball>>,
+    mut ball: Query<(&mut Transform, &mut Velocity), With<Ball>>,
     mut goal_event_writer: EventWriter<crate::GoalEvent>,
 ) {
-    let position = ball.single();
+    let (mut position, mut velocity) = ball.single_mut();
     let x = position.translation.x;
-    if x > 15.0 {
-        goal_event_writer.send(GoalEvent { side: Side::Player });
-    } else if x < -15.0 {
-        goal_event_writer.send(GoalEvent { side: Side::CPU });
+    if x > 15.0 || x < -15.0 {
+        if x > 15.0 {
+            goal_event_writer.send(GoalEvent { side: Side::Player });
+        } else if x < -15.0 {
+            goal_event_writer.send(GoalEvent { side: Side::CPU });
+        }
+        position.translation.x = 0.0;
+        position.translation.y = 1.2;
+
+        let mut rng = rand::thread_rng();
+
+        velocity.linvel.y = 0.0;
+        velocity.linvel.x = rng.gen_range(-10.0..10.0);
+        velocity.linvel.z = rng.gen_range(-10.0..10.0);
     }
 }
 
-fn adjust_vector(mut vector: Vec3, x: f32) -> Vec3 {
-    vector = vector.normalize() * x;
-    if vector.x > 0.0 && vector.x < 2.0 {
-        vector.x += 2.0;
-    } else if vector.x < 0.0 && vector.x > -2.0 {
-        vector.x -= 2.0;
+fn adjust_vector(mut vector: Vec3) -> Vec3 {
+    //vector = vector.normalize() * x;
+    if vector.x > 0.0 && vector.x < 10.0 {
+        vector.x = 10.0;
+    } else if vector.x < 0.0 && vector.x > -10.0 {
+        vector.x = -10.0;
     }
-    vector.y = 0.0;
+    //vector.y = 0.0;
     vector
 }

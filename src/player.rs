@@ -12,22 +12,27 @@ impl Plugin for PlayerPlugin {
 pub struct Player;
 fn spawn_player(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+        .spawn(SpatialBundle {
             transform: Transform {
-                translation: Vec3::new(-12.5, 0.0, 0.0),
+                translation: Vec3::new(-12.5, 0.75, 0.0),
                 rotation: Quat::IDENTITY,
-                scale: Vec3::new(1.0, 3.0, 3.0),
+                scale: Vec3::new(1.0, 1.5, 3.0),
             },
-            ..Default::default()
+            ..default()
+        })
+        .with_children(|commands| {
+            commands.spawn(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                ..Default::default()
+            });
         })
         .insert(Name::new("Player"))
         .insert(Player)
         .insert(RigidBody::KinematicPositionBased)
-        .insert(GravityScale(0.0))
-        .insert(Collider::cuboid(0.5, 1.5, 0.5))
+        .insert(Dominance::group(10))
+        //.insert(GravityScale(0.0))
+        .insert(Collider::cuboid(0.5, 0.4, 0.5))
         .insert(Restitution::coefficient(1.3))
-        .insert(Friction::coefficient(0.0))
         .insert(KinematicCharacterController::default());
 }
 

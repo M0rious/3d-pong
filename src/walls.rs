@@ -40,7 +40,7 @@ fn spawn_walls(
                 })
                 .insert(Name::new("Wall_Top"))
                 .insert(Collider::cuboid(20.0, 10.0, 0.1))
-                .insert(Restitution::coefficient(1.3))
+                .insert(Restitution::coefficient(1.1))
                 .insert(NotShadowCaster);
         });
 
