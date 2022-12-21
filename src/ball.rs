@@ -56,7 +56,7 @@ fn detect_goal(
 ) {
     let (mut position, mut velocity) = ball.single_mut();
     let x = position.translation.x;
-    if x > 15.0 || x < -15.0 {
+    if !(-15.0..=15.0).contains(&x) {
         if x > 15.0 {
             goal_event_writer.send(GoalEvent { side: Side::Player });
         } else if x < -15.0 {
