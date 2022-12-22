@@ -1,3 +1,5 @@
+use bevy_rapier3d::prelude::{Dominance, KinematicCharacterController, RigidBody};
+
 use crate::*;
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
@@ -10,7 +12,12 @@ impl Plugin for PlayerPlugin {
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Player;
-fn spawn_player(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
+fn spawn_player(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    assets: Res<GameAssets>,
+) {
     commands
         .spawn(SpatialBundle {
             transform: Transform {
@@ -23,6 +30,13 @@ fn spawn_player(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
         .with_children(|commands| {
             commands.spawn(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                material: materials.add(StandardMaterial {
+                    base_color_texture: Some(assets.wood.clone()),
+                    perceptual_roughness: 1.0,
+                    metallic: 1.0,
+                    reflectance: 0.0,
+                    ..Default::default()
+                }),
                 ..Default::default()
             });
         })
@@ -39,14 +53,15 @@ fn spawn_player(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
 fn controls(
     keyboard: Res<Input<KeyCode>>,
     mut controllers: Query<&mut KinematicCharacterController, With<Player>>,
+    time: Res<Time>,
 ) {
     let mut controller = controllers.single_mut();
 
-    let speed = 0.2;
+    let speed = 10.0;
     if keyboard.pressed(KeyCode::W) {
-        controller.translation = Some(Vec3::new(0.0, 0.0, -speed));
+        controller.translation = Some(Vec3::new(0.0, 0.0, -speed * time.delta_seconds()));
     }
     if keyboard.pressed(KeyCode::S) {
-        controller.translation = Some(Vec3::new(0.0, 0.0, speed));
+        controller.translation = Some(Vec3::new(0.0, 0.0, speed * time.delta_seconds()));
     }
 }

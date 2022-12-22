@@ -1,3 +1,4 @@
+use bevy_rapier3d::prelude::{GravityScale, RigidBody, Velocity};
 use rand::Rng;
 
 use crate::*;
@@ -70,6 +71,7 @@ fn detect_goal(
         velocity.linvel.y = 0.0;
         velocity.linvel.x = rng.gen_range(-10.0..10.0);
         velocity.linvel.z = rng.gen_range(-10.0..10.0);
+        velocity.angvel = Vec3::ZERO;
     }
 }
 

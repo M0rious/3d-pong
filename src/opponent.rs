@@ -1,4 +1,6 @@
-use crate::*;
+use bevy_rapier3d::prelude::{Dominance, KinematicCharacterController, RigidBody};
+
+use crate::{ball::Ball, *};
 pub struct OpponentPlugin;
 impl Plugin for OpponentPlugin {
     fn build(&self, app: &mut App) {
@@ -10,7 +12,12 @@ impl Plugin for OpponentPlugin {
 #[derive(Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct Opponent;
-fn spawn_opponent(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
+fn spawn_opponent(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    assets: Res<GameAssets>,
+) {
     commands
         .spawn(SpatialBundle {
             transform: Transform {
@@ -23,6 +30,13 @@ fn spawn_opponent(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
         .with_children(|commands| {
             commands.spawn(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                material: materials.add(StandardMaterial {
+                    base_color_texture: Some(assets.wood.clone()),
+                    perceptual_roughness: 1.0,
+                    metallic: 1.0,
+                    reflectance: 0.0,
+                    ..Default::default()
+                }),
                 ..Default::default()
             });
         })
@@ -36,16 +50,16 @@ fn spawn_opponent(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
         .insert(KinematicCharacterController::default());
 }
 fn controls(
-    keyboard: Res<Input<KeyCode>>,
-    mut controllers: Query<&mut KinematicCharacterController, With<Opponent>>,
+    ball_data: Query<&Transform, With<Ball>>,
+    mut opponents: Query<(&GlobalTransform, &mut KinematicCharacterController), With<Opponent>>,
+    time: Res<Time>,
 ) {
-    let mut controller = controllers.single_mut();
-
-    let speed = 0.2;
-    if keyboard.pressed(KeyCode::Up) {
-        controller.translation = Some(Vec3::new(0.0, 0.0, -speed));
-    }
-    if keyboard.pressed(KeyCode::Down) {
-        controller.translation = Some(Vec3::new(0.0, 0.0, speed));
+    let (opponent_transform, mut controller) = opponents.single_mut();
+    let speed = 10.0;
+    let ball_transform = ball_data.get_single().unwrap();
+    if (ball_transform.translation.z - opponent_transform.translation().z) > 1.0 {
+        controller.translation = Some(Vec3::new(0.0, 0.0, speed * time.delta_seconds()));
+    } else if (ball_transform.translation.z - opponent_transform.translation().z) < 1.0 {
+        controller.translation = Some(Vec3::new(0.0, 0.0, -speed * time.delta_seconds()));
     }
 }

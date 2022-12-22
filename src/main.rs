@@ -3,9 +3,13 @@ use std::f32::consts::PI;
 use ball::BallPlugin;
 //use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::{app::AppExit, prelude::*};
+#[cfg(debug_assertions)]
 use bevy_inspector_egui::WorldInspectorPlugin;
+#[cfg(debug_assertions)]
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
-use bevy_rapier3d::prelude::*;
+use bevy_rapier3d::prelude::{Collider, NoUserData, RapierPhysicsPlugin, Restitution};
+#[cfg(debug_assertions)]
+use bevy_rapier3d::render::RapierDebugRenderPlugin;
 use main_menu::MainMenuPlugin;
 use opponent::OpponentPlugin;
 use player::PlayerPlugin;
@@ -23,7 +27,8 @@ mod scoreboard;
 mod walls;
 extern crate rand;
 fn main() {
-    App::new()
+    let mut binding = App::new();
+    let game = binding
         .insert_resource(ClearColor(Color::rgb(0.6, 0.6, 0.6)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             window: WindowDescriptor {
@@ -39,8 +44,6 @@ fn main() {
         //.add_plugin(LogDiagnosticsPlugin::default())
         //.add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(InspectableRapierPlugin)
-        .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(PlayerPlugin)
         .add_plugin(BallPlugin)
         .add_plugin(OpponentPlugin)
@@ -48,13 +51,17 @@ fn main() {
         .add_plugin(MainMenuPlugin)
         .add_plugin(ScoreboardPlugin)
         .insert_resource(Msaa { samples: 4 })
-        .add_plugin(WorldInspectorPlugin::new())
         .add_startup_system_to_stage(StartupStage::PreStartup, asset_loading)
         .add_startup_system(spawn_camera)
         .add_system_set(SystemSet::on_enter(GameState::Gameplay).with_system(spawn_basic_scene))
         .add_state(GameState::MainMenu)
-        .add_system(quit)
-        .run();
+        .add_system(quit);
+    if cfg!(debug_assertions) {
+        game.add_plugin(InspectableRapierPlugin)
+            .add_plugin(RapierDebugRenderPlugin::default())
+            .add_plugin(WorldInspectorPlugin::new());
+    }
+    game.run();
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -76,6 +83,7 @@ fn asset_loading(mut commands: Commands, assets: Res<AssetServer>) {
         ball_scene: assets.load("ball.glb#Scene0"),
         grass_texture: assets.load("textures/grass.tga"),
         grass_normal: assets.load("textures/grass_normal.tga"),
+        wood: assets.load("textures/wood.tga"),
     });
 }
 
@@ -91,6 +99,7 @@ pub struct GameAssets {
     pub ball_scene: Handle<Scene>,
     pub grass_texture: Handle<Image>,
     pub grass_normal: Handle<Image>,
+    pub wood: Handle<Image>,
 }
 
 fn spawn_basic_scene(
@@ -98,7 +107,10 @@ fn spawn_basic_scene(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     assets: Res<GameAssets>,
+    //mut windows: ResMut<Windows>,
 ) {
+    // let window = windows.get_primary_mut().unwrap();
+    // let (win_h, win_w) = (window.width(), window.height());
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
         brightness: 2.0,
@@ -133,6 +145,9 @@ fn spawn_basic_scene(
             material: materials.add(StandardMaterial {
                 base_color_texture: Some(assets.grass_texture.clone()),
                 normal_map_texture: Some(assets.grass_normal.clone()),
+                perceptual_roughness: 1.0,
+                metallic: 1.0,
+                reflectance: 0.0,
                 ..Default::default()
             }),
             ..default()

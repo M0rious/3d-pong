@@ -35,7 +35,7 @@ fn spawn_walls(
                         min_z: 0.0,
                         max_z: 0.1,
                     })),
-                    material: materials.add(Color::rgba(254.0, 0.0, 0.0, 255.0).into()),
+                    material: materials.add(Color::rgba(0.0, 0.0, 0.0, 0.0).into()),
                     ..default()
                 })
                 .insert(Name::new("Wall_Top"))
@@ -60,7 +60,7 @@ fn spawn_walls(
                         min_z: 0.0,
                         max_z: 0.1,
                     })),
-                    material: materials.add(Color::rgba(254.0, 0.0, 0.0, 255.0).into()),
+                    material: materials.add(Color::rgba(0.0, 0.0, 0.0, 0.0).into()),
                     ..default()
                 })
                 .insert(Name::new("Wall_Bottom"))
