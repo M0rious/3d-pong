@@ -7,9 +7,11 @@ use bevy::{app::AppExit, prelude::*};
 use bevy_inspector_egui::WorldInspectorPlugin;
 #[cfg(debug_assertions)]
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
-use bevy_rapier3d::prelude::{Collider, NoUserData, RapierPhysicsPlugin, Restitution};
 #[cfg(debug_assertions)]
 use bevy_rapier3d::render::RapierDebugRenderPlugin;
+
+use bevy_rapier3d::prelude::{Collider, NoUserData, RapierPhysicsPlugin, Restitution};
+
 use main_menu::MainMenuPlugin;
 use opponent::OpponentPlugin;
 use player::PlayerPlugin;
@@ -25,7 +27,7 @@ mod opponent;
 mod player;
 mod scoreboard;
 mod walls;
-extern crate rand;
+//extern crate rand;
 fn main() {
     let mut binding = App::new();
     let game = binding
@@ -56,11 +58,11 @@ fn main() {
         .add_system_set(SystemSet::on_enter(GameState::Gameplay).with_system(spawn_basic_scene))
         .add_state(GameState::MainMenu)
         .add_system(quit);
-    if cfg!(debug_assertions) {
-        game.add_plugin(InspectableRapierPlugin)
-            .add_plugin(RapierDebugRenderPlugin::default())
-            .add_plugin(WorldInspectorPlugin::new());
-    }
+    #[cfg(debug_assertions)]
+    game.add_plugin(InspectableRapierPlugin)
+        .add_plugin(RapierDebugRenderPlugin::default())
+        .add_plugin(WorldInspectorPlugin::new());
+
     game.run();
 }
 

@@ -1,5 +1,6 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use bevy_rapier3d::prelude::{GravityScale, RigidBody, Velocity};
-use rand::Rng;
 
 use crate::*;
 #[derive(Reflect, Component, Default)]
@@ -38,17 +39,12 @@ fn spawn_ball(mut commands: Commands, assets: Res<GameAssets>) {
         .insert(GravityScale(1.0))
         .insert(Collider::ball(1.15))
         .insert(Velocity::linear(Vec3::new(-10.0, 0.0, 0.0)))
-        .insert(Restitution::coefficient(1.3))
-        //.insert(LockedAxes::TRANSLATION_LOCKED_Y)
-        ;
+        .insert(Restitution::coefficient(1.3));
 }
 
 fn ball_velocity(mut ball: Query<&mut Velocity, With<Ball>>) {
     let mut tr = ball.single_mut();
-    //if tr.linvel.length() > 0.0 {
-    //  let speed = 10.0;
     tr.linvel = adjust_vector(tr.linvel);
-    //}
 }
 
 fn detect_goal(
@@ -66,22 +62,25 @@ fn detect_goal(
         position.translation.x = 0.0;
         position.translation.y = 1.2;
 
-        let mut rng = rand::thread_rng();
-
         velocity.linvel.y = 0.0;
-        velocity.linvel.x = rng.gen_range(-10.0..10.0);
-        velocity.linvel.z = rng.gen_range(-10.0..10.0);
+        velocity.linvel.x = random_number_in_range(-10.0, 10.0);
+        velocity.linvel.z = random_number_in_range(-10.0, 10.0);
         velocity.angvel = Vec3::ZERO;
     }
 }
+fn random_number_in_range(min: f32, max: f32) -> f32 {
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
+    let random_number = now.as_secs() * now.subsec_nanos() as u64;
+    random_number as f32 / u64::max_value() as f32 * (max - min) + min
+}
 
 fn adjust_vector(mut vector: Vec3) -> Vec3 {
-    //vector = vector.normalize() * x;
     if vector.x > 0.0 && vector.x < 10.0 {
         vector.x = 10.0;
     } else if vector.x < 0.0 && vector.x > -10.0 {
         vector.x = -10.0;
     }
-    //vector.y = 0.0;
     vector
 }
