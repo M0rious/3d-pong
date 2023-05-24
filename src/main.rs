@@ -42,7 +42,6 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugins(DefaultPlugins)
         .add_state::<GameState>()
         .add_event::<GoalEvent>()
         //.add_plugin(LogDiagnosticsPlugin::default())

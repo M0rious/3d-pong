@@ -18,7 +18,7 @@ bevy-inspector-egui = "0.18.3"
 # Not yet on bevy 0.10
 # bevy-inspector-egui-rapier = {version = "0.9", features = ["rapier3d"]}
 bevy_rapier3d = {version = "0.21.0", features = ["debug-render", "simd-stable"]}
-#rand = "0.8.5"
+rand = "0.8.5"
 
 [profile.release]
 lto = "thin"
