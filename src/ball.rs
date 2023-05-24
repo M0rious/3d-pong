@@ -10,9 +10,9 @@ pub struct BallPlugin;
 impl Plugin for BallPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Ball>()
-            .add_system_set(SystemSet::on_enter(GameState::Gameplay).with_system(spawn_ball))
-            .add_system_set(SystemSet::on_update(GameState::Gameplay).with_system(ball_velocity))
-            .add_system_set(SystemSet::on_update(GameState::Gameplay).with_system(detect_goal));
+            .add_system(spawn_ball.in_schedule(OnEnter(GameState::Gameplay)))
+            .add_system(ball_velocity.in_set(OnUpdate(GameState::Gameplay)))
+            .add_system(detect_goal.in_set(OnUpdate(GameState::Gameplay)));
     }
 }
 

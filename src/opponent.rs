@@ -5,8 +5,8 @@ pub struct OpponentPlugin;
 impl Plugin for OpponentPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Opponent>()
-            .add_system_set(SystemSet::on_enter(GameState::Gameplay).with_system(spawn_opponent))
-            .add_system_set(SystemSet::on_update(GameState::Gameplay).with_system(controls));
+            .add_system(spawn_opponent.in_schedule(OnEnter(GameState::Gameplay)))
+            .add_system(controls.in_set(OnUpdate(GameState::Gameplay)));
     }
 }
 #[derive(Reflect, Component, Default)]
