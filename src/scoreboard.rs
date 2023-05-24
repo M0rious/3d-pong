@@ -4,8 +4,8 @@ pub struct ScoreboardPlugin;
 
 impl Plugin for ScoreboardPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameState::Gameplay).with_system(spawn_scoreboard))
-            .add_system_set(SystemSet::on_update(GameState::Gameplay).with_system(goal_handler));
+        app.add_system(spawn_scoreboard.in_schedule(OnEnter(GameState::Gameplay)))
+            .add_system(goal_handler.in_set(OnUpdate(GameState::Gameplay)));
     }
 }
 

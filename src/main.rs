@@ -4,9 +4,10 @@ use ball::BallPlugin;
 //use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::{app::AppExit, prelude::*};
 #[cfg(debug_assertions)]
-use bevy_inspector_egui::WorldInspectorPlugin;
-#[cfg(debug_assertions)]
-use bevy_inspector_egui_rapier::InspectableRapierPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
+// Not yet on bevy 0.10
+// #[cfg(debug_assertions)]
+// use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 #[cfg(debug_assertions)]
 use bevy_rapier3d::render::RapierDebugRenderPlugin;
 
@@ -33,15 +34,16 @@ fn main() {
     let game = binding
         .insert_resource(ClearColor(Color::rgb(0.6, 0.6, 0.6)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
-            window: WindowDescriptor {
-                height: HEIGHT,
-                width: WIDTH,
+            primary_window: Some(Window {
+                resolution: (WIDTH, HEIGHT).into(),
                 title: "Pong".to_string(),
                 resizable: false,
                 ..default()
-            },
+            }),
             ..default()
         }))
+        .add_plugins(DefaultPlugins)
+        .add_state::<GameState>()
         .add_event::<GoalEvent>()
         //.add_plugin(LogDiagnosticsPlugin::default())
         //.add_plugin(FrameTimeDiagnosticsPlugin::default())
@@ -52,22 +54,23 @@ fn main() {
         .add_plugin(WallPlugin)
         .add_plugin(MainMenuPlugin)
         .add_plugin(ScoreboardPlugin)
-        .insert_resource(Msaa { samples: 4 })
-        .add_startup_system_to_stage(StartupStage::PreStartup, asset_loading)
+        .insert_resource(Msaa::Sample4)
+        .add_system(asset_loading.in_base_set(StartupSet::PreStartup))
         .add_startup_system(spawn_camera)
-        .add_system_set(SystemSet::on_enter(GameState::Gameplay).with_system(spawn_basic_scene))
-        .add_state(GameState::MainMenu)
+        .add_system(spawn_basic_scene.in_schedule(OnEnter(GameState::Gameplay)))
         .add_system(quit);
     #[cfg(debug_assertions)]
-    game.add_plugin(InspectableRapierPlugin)
-        .add_plugin(RapierDebugRenderPlugin::default())
+    // InspectableRapierPlugin is not yet upgraded to bevy 0.10
+    //game.add_plugin(InspectableRapierPlugin)
+    game.add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(WorldInspectorPlugin::new());
 
     game.run();
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum GameState {
+    #[default]
     MainMenu,
     Gameplay,
 }
@@ -121,15 +124,6 @@ fn spawn_basic_scene(
     const HALF_SIZE: f32 = 20.0;
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
-            shadow_projection: OrthographicProjection {
-                left: -HALF_SIZE,
-                right: HALF_SIZE,
-                bottom: -HALF_SIZE,
-                top: HALF_SIZE,
-                near: -10.0 * HALF_SIZE,
-                far: 10.0 * HALF_SIZE,
-                ..default()
-            },
             shadows_enabled: true,
             ..default()
         },
@@ -143,7 +137,10 @@ fn spawn_basic_scene(
 
     commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Plane { size: 30.0 })),
+            mesh: meshes.add(Mesh::from(shape::Plane {
+                size: 30.0,
+                subdivisions: 1,
+            })),
             material: materials.add(StandardMaterial {
                 base_color_texture: Some(assets.grass_texture.clone()),
                 normal_map_texture: Some(assets.grass_normal.clone()),

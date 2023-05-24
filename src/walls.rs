@@ -8,7 +8,7 @@ pub struct WallPlugin;
 impl Plugin for WallPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Wall>()
-            .add_system_set(SystemSet::on_enter(GameState::Gameplay).with_system(spawn_walls))
+            .add_system(spawn_walls.in_schedule(OnEnter(GameState::Gameplay)))
             //.add_system(controls)
             ;
     }
