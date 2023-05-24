@@ -121,7 +121,6 @@ fn spawn_basic_scene(
         brightness: 2.0,
     });
 
-    const HALF_SIZE: f32 = 20.0;
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             shadows_enabled: true,
