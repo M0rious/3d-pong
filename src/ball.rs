@@ -1,6 +1,5 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use bevy_rapier3d::prelude::{GravityScale, RigidBody, Velocity};
+use rand::random;
 
 use crate::*;
 #[derive(Reflect, Component, Default)]
@@ -69,11 +68,7 @@ fn detect_goal(
     }
 }
 fn random_number_in_range(min: f32, max: f32) -> f32 {
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-    let random_number = now.as_secs() * now.subsec_nanos() as u64;
-    random_number as f32 / u64::max_value() as f32 * (max - min) + min
+    random::<f32>() * (max - min) + min
 }
 
 fn adjust_vector(mut vector: Vec3) -> Vec3 {
@@ -83,4 +78,18 @@ fn adjust_vector(mut vector: Vec3) -> Vec3 {
         vector.x = -10.0;
     }
     vector
+}
+
+#[cfg(test)]
+mod test {
+    use std::assert_eq;
+
+    #[test]
+    fn test_random_number_in_range() {
+        for _ in 0..10000 {
+            let number = super::random_number_in_range(2.0, 4.0);
+            assert_eq!(number >= 2.0, true);
+            assert_eq!(number <= 4.0, true);
+        }
+    }
 }
